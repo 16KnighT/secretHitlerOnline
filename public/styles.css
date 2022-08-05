@@ -1,7 +1,11 @@
+.mainpage:not(#intropage) {
+    display: none;
+}
+
 body {
     text-align: center;
-    background-color: #FCBD6F;
-    color: #434343;
+    background-color: #fcba6a;
+    color: #434241;
     font-family: "courier-prime", Courier, sans-serif;
 }
 
@@ -21,8 +25,8 @@ h2, h1 {
 button {
     cursor: pointer;
     border: none;
-    color: #FCBD6F;
-    background-color: #434343;
+    color: #fcba6a;
+    background-color: #434241;
     padding: 16.5px 35px;
     border-radius: 10px;
     font-family: "courier-prime", Courier, sans-serif;
@@ -35,7 +39,7 @@ button {
 
 button:hover {
     transform: translateY(4px);
-    box-shadow: 0 5px #434343;
+    box-shadow: 0 5px #434241;
 }
 
 input {
@@ -51,9 +55,9 @@ input {
 #hostButt {
     border-radius: 1px;
     padding: 95px 35px;
-    background-color: #C32F27;
-    border: 5px solid #780116;
-    box-shadow: 0 9px #780116;
+    background-color: #e16d53;
+    border: 5px solid #534d43;
+    box-shadow: 0 9px #534d43;
     margin-bottom: 50px;
 }
 #hostButt:hover {
@@ -63,11 +67,11 @@ input {
 
 #joinButt {
     padding: 100px 35px;
-    background-color: #50b2c0;
+    background-color: #72bbe9;
     border-radius: 25px;
-    box-shadow: 0 9px #3c787e;
+    box-shadow: 0 9px #534d43;
 }
 #joinButt:hover {
     transform: translateY(4px);
-    box-shadow: 0 5px #50b2c0;
+    box-shadow: 0 5px #72bbe9;
 }

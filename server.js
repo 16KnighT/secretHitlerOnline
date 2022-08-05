@@ -1,5 +1,6 @@
 const http = require("http")
 const fs = require("fs").promises
+const { WebSocketServer } = require('ws');
 
 const host = 'localhost'
 const port = 8000
@@ -39,11 +40,29 @@ const requestListener = async function (req, res) {
     }
 }
 
+
+
 function startserver() {
     const server = http.createServer(requestListener)
+    const wss = new WebSocketServer({ server });
+
     server.listen(port, host, () => {
         console.log(`Server is running on http://${host}:${port}`);
     })
+
+    wss.on('connection', function connection(ws) {
+        ws.on('message', function message(data) {
+            console.log(`${data}`);
+            if (`${data}` === 'genroomcode') {
+                ws.send('TOBY')
+            }
+
+        });
+      
+        ws.send('something');
+      });
+    
+    
 }
 
 startserver()
