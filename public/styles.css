@@ -50,9 +50,10 @@ input {
     border-radius: 10px;
     border: none;
     font-size: 20px;
+    text-transform: uppercase;
 }
 
-#hostButt {
+#hostbutt {
     border-radius: 1px;
     padding: 95px 35px;
     background-color: #e16d53;
@@ -60,18 +61,18 @@ input {
     box-shadow: 0 9px #534d43;
     margin-bottom: 50px;
 }
-#hostButt:hover {
+#hostbutt:hover {
     transform: translateY(9px);
     box-shadow: 0 0px;
 }
 
-#joinButt {
+#joinbutt {
     padding: 100px 35px;
     background-color: #72bbe9;
     border-radius: 25px;
     box-shadow: 0 9px #534d43;
 }
-#joinButt:hover {
+#joinbutt:hover {
     transform: translateY(4px);
     box-shadow: 0 5px #72bbe9;
 }

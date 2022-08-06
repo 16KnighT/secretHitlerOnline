@@ -1,11 +1,16 @@
-const http = require("http")
-const fs = require("fs").promises
+const http = require('http')
+const fs = require('fs').promises
 const { WebSocketServer } = require('ws');
+
+const Game = require('./gameobjects').Game
+const Player = require('./gameobjects').Player
 
 const host = 'localhost'
 const port = 8000
 
 let indexFile
+
+const runninggames = new Map()
 
 const requestListener = async function (req, res) {
 
@@ -53,12 +58,16 @@ function startserver() {
     wss.on('connection', function connection(ws) {
         ws.on('message', function message(data) {
             console.log(`${data}`);
-            if (`${data}` === 'genroomcode') {
-                ws.send('TOBY')
+            if (`${data}` === 'startgame') { //creates a new game and adds it to a list
+                let roomcode = 'TOBY'
+                runninggames.set(roomcode, new Game(ws))
+            } else if (`${data}` === 'joingame TOBY') {
+                runninggames.get('TOBY').newplayer(new Player(ws))
             }
-
         });
-      
+        setTimeout(() => { //displays running games after someone joins
+            console.log(runninggames.entries())
+        },2000)
         ws.send('something');
       });
     
