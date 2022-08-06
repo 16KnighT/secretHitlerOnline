@@ -21,11 +21,13 @@ const requestListener = async function (req, res) {
         if( "/" == url[ url.length - 1 ] ) url += "index.html"
 
         const filecontents = await fs.readFile(__dirname + url)
-
-        switch( url.substr( url.length - 3 ) ) {
-            case "css":
+        switch( url.substr( url.length - 2 ) ) {
+            case "ss":
                 res.setHeader("Content-Type", "text/css")
-                break
+                break;
+            case "js":
+                res.setHeader("Content-Type", "text/javascript")
+                break;
             default:
                 res.setHeader("Content-Type", "text/html")
         }
@@ -45,8 +47,6 @@ const requestListener = async function (req, res) {
     }
 }
 
-
-
 function startserver() {
     const server = http.createServer(requestListener)
     const wss = new WebSocketServer({ server });
@@ -56,13 +56,23 @@ function startserver() {
     })
 
     wss.on('connection', function connection(ws) {
-        ws.on('message', function message(data) {
-            console.log(`${data}`);
-            if (`${data}` === 'startgame') { //creates a new game and adds it to a list
-                let roomcode = 'TOBY'
-                runninggames.set(roomcode, new Game(ws))
-            } else if (`${data}` === 'joingame TOBY') {
-                runninggames.get('TOBY').newplayer(new Player(ws))
+        ws.on('message', function message(mssg) {
+            mssg = JSON.parse( mssg.toString() )
+            console.log(mssg);
+            switch (mssg.action) { //creates a new game and adds it to a list
+                case 'startgame':
+                    runninggames.set(mssg.data, new Game(ws))
+                    break;
+                case'joingame':
+                    try {
+                        runninggames.get(mssg.data).newplayer(new Player(ws))
+                    } catch(err) {
+                        
+                    }
+                    break;
+                default:
+                    console.log('Unidentifiable action')
+
             }
         });
         setTimeout(() => { //displays running games after someone joins
