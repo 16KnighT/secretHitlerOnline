@@ -12,6 +12,22 @@ let indexFile
 
 const runninggames = new Map()
 
+function genroomcode() {
+    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+    let roomcode = ''
+    do {
+        roomcode = ''
+        for (let i = 0; i < 4; i++) {
+            roomcode += alphabet[Math.floor(Math.random() * 26)]
+        }
+    } while (runninggames.has(roomcode))
+    return roomcode
+}
+
+function socketsend(socket, action, data) {
+    socket.send(JSON.stringify( { 'action': action, 'data': data } ) )
+}
+
 const requestListener = async function (req, res) {
 
     try {
@@ -57,15 +73,21 @@ function startserver() {
 
     wss.on('connection', function connection(ws) {
         ws.on('message', function message(mssg) {
+
             mssg = JSON.parse( mssg.toString() )
             console.log(mssg);
+
             switch (mssg.action) { //creates a new game and adds it to a list
                 case 'startgame':
-                    runninggames.set(mssg.data, new Game(ws))
+                    let roomcode = genroomcode()
+                    console.log(roomcode)
+                    runninggames.set(roomcode, new Game(ws))
+                    socketsend(ws, 'startgame', roomcode)
                     break;
                 case'joingame':
                     try {
                         runninggames.get(mssg.data).newplayer(new Player(ws))
+                        socketsend(ws, 'success')
                     } catch(err) {
                         
                     }
@@ -77,8 +99,7 @@ function startserver() {
         });
         setTimeout(() => { //displays running games after someone joins
             console.log(runninggames.entries())
-        },2000)
-        ws.send('something');
+        },2000);
       });
     
     

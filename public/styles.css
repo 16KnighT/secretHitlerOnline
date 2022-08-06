@@ -76,3 +76,8 @@ input {
     transform: translateY(4px);
     box-shadow: 0 5px #72bbe9;
 }
+
+#roomcodeelement {
+    font-size: 100px;
+    font-weight: bold;
+}
