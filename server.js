@@ -1,9 +1,9 @@
 const http = require('http')
 const fs = require('fs').promises
-const { WebSocketServer } = require('ws');
+const { WebSocketServer } = require('ws')
+const { Player } = require('./serverobjects')
 
-const Game = require('./gameobjects').Game
-const Player = require('./gameobjects').Player
+const Game = require('./serverobjects').Game
 
 const host = 'localhost'
 const port = 8000
@@ -24,8 +24,8 @@ function genroomcode() {
     return roomcode
 }
 
-function socketsend(socket, action, data) {
-    socket.send(JSON.stringify( { 'action': action, 'data': data } ) )
+function socketsend(socket, action, data, id) {
+    socket.send(JSON.stringify( { 'action': action, 'data': data, 'id': id } ) )
 }
 
 const requestListener = async function (req, res) {
@@ -72,6 +72,8 @@ function startserver() {
     })
 
     wss.on('connection', function connection(ws) {
+        let playerroomcode
+        let playerid
         ws.on('message', function message(mssg) {
 
             mssg = JSON.parse( mssg.toString() )
@@ -82,15 +84,25 @@ function startserver() {
                     let roomcode = genroomcode()
                     console.log(roomcode)
                     runninggames.set(roomcode, new Game(ws))
-                    socketsend(ws, 'startgame', roomcode)
+                    socketsend(ws, 'startgamesuccess', roomcode)
                     break;
-                case'joingame':
+                case 'joingame':
                     try {
-                        runninggames.get(mssg.data).newplayer(new Player(ws))
-                        socketsend(ws, 'success')
+                        playerroomcode = mssg.data
+                        let room = runninggames.get(playerroomcode)
+                        let newplayer = new Player(ws)
+                        playerid = newplayer.id
+                        room.newplayer(newplayer)
+
+                        socketsend(room.socket, 'playerjoin', newplayer.id)
+                        socketsend(ws, 'joinsuccess')
                     } catch(err) {
-                        
+                        socketsend(ws, 'joinfail')
+                        console.log(err)
                     }
+                    break;
+                case 'namerelay':
+                    socketsend(runninggames.get(playerroomcode).socket, 'nameset', mssg.data, playerid)
                     break;
                 default:
                     console.log('Unidentifiable action')

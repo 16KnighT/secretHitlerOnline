@@ -1,15 +1,13 @@
 /**
- * game and player objects used in code
+ * game object used in server code
  */
 
+ const { v4: uuidv4 } = require('uuid')
+
 class Game {
-    playerslist = []
     constructor(socket) {
         this.socket = socket
-    }
-    
-    get players() {
-        return this.playerslist
+        this.playerslist = []
     }
 
     newplayer (player) {
@@ -20,7 +18,9 @@ class Game {
 class Player {
     constructor(socket) {
         this.socket = socket
+        this.id = uuidv4()
     }
+    
 }
 
 module.exports.Game = Game

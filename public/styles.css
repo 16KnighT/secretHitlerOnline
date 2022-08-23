@@ -50,6 +50,9 @@ input {
     border-radius: 10px;
     border: none;
     font-size: 20px;
+}
+
+#roomcode {
     text-transform: uppercase;
 }
 
@@ -80,4 +83,5 @@ input {
 #roomcodeelement {
     font-size: 100px;
     font-weight: bold;
+    margin: 10px;
 }
