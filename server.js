@@ -14,17 +14,16 @@ const runninggames = new Map()
 
 function genroomcode() {
     const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-    let roomcode = ''
     do {
-        roomcode = ''
+        let roomcode = ''
         for (let i = 0; i < 4; i++) {
-            roomcode += alphabet[Math.floor(Math.random() * 26)]
+            roomcode += alphabet[Math.floor(Math.random() * 26)]//adds a random letter to the room code 4 times
         }
-    } while (runninggames.has(roomcode))
+    } while (runninggames.has(roomcode))//if the code is already being used it'll do it again
     return roomcode
 }
 
-function socketsend(socket, action, data, id) {
+function socketsend(socket, action, data, id) {//simple function to send data via websocket
     socket.send(JSON.stringify( { 'action': action, 'data': data, 'id': id } ) )
 }
 
@@ -37,7 +36,7 @@ const requestListener = async function (req, res) {
         if( "/" == url[ url.length - 1 ] ) url += "index.html"
 
         const filecontents = await fs.readFile(__dirname + url)
-        switch( url.substr( url.length - 2 ) ) {
+        switch( url.substr( url.length - 2 ) ) {//determines what type of file the client is requesting (i.e. css, js or html file)
             case "ss":
                 res.setHeader("Content-Type", "text/css")
                 break;
@@ -64,6 +63,7 @@ const requestListener = async function (req, res) {
 }
 
 function startserver() {
+    //creating a new server and websocket server which people can connect to
     const server = http.createServer(requestListener)
     const wss = new WebSocketServer({ server });
 
@@ -86,7 +86,7 @@ function startserver() {
                     runninggames.set(roomcode, new Game(ws))
                     socketsend(ws, 'startgamesuccess', roomcode)
                     break;
-                case 'joingame':
+                case 'joingame': //adds player to the game they're trying to connect to
                     try {
                         playerroomcode = mssg.data
                         let room = runninggames.get(playerroomcode)
@@ -101,7 +101,7 @@ function startserver() {
                         console.log(err)
                     }
                     break;
-                case 'namerelay':
+                case 'namerelay': //allows player to give themselves a nickname
                     socketsend(runninggames.get(playerroomcode).socket, 'nameset', mssg.data, playerid)
                     break;
                 default:
