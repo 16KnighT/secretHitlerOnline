@@ -7,18 +7,18 @@
 class Game {
     constructor(socket) {
         this.socket = socket
-        this.playerslist = []
+        this.playerslist = new Map()
     }
 
-    newplayer (player) {
-        this.playerslist.push(player)
+    newplayer (id, ws) {
+        this.playerslist.set(id, ws)
     }
 }
 
 class Player {
     constructor(socket) {
         this.socket = socket
-        this.id = uuidv4()
+        this.id = ''
     }
     
 }

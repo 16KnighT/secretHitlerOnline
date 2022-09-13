@@ -4,7 +4,7 @@
  * @param {string} pagename 
  */
 
-import Player from './public/clientobjects.js'
+//import Player from './public/clientobjects.js'
 
 let fellowplayers = [] //stores the players - means that players can specify targets for their actions and the game can respond
 
@@ -19,8 +19,8 @@ function openpage(pagename) {
     document.getElementById(pagename).style.display = 'inline'
 }
 
-function socketsend(socket, action, data) {
-    socket.send(JSON.stringify( { 'action': action, 'data': data } ) )
+function socketsend(socket, action, data, id) {
+    socket.send(JSON.stringify( { 'action': action, 'data': data, 'id': id } ) )
 }
 
 window.addEventListener('load', () => { //attach events to HTML elements here
@@ -53,7 +53,7 @@ window.addEventListener('load', () => { //attach events to HTML elements here
                     break;
                 case 'joinfail':
                     document.getElementById('roomcode').value = ""
-                    document.getElementById('roomcode').placeholder = "ROOM DOESN'T EXIST"
+                    document.getElementById('roomcode').placeholder = mssg.data
                     break;
                 default:
                     console.log('Unidentifiable action')
@@ -65,19 +65,10 @@ window.addEventListener('load', () => { //attach events to HTML elements here
     document.getElementById('entercode').addEventListener('click', () => {
         console.log('connecting to server...')
         let roomcode = document.getElementById('roomcode').value.toUpperCase()
-
-        if (roomcode.length === 4) {
-            socketsend(socket, 'joingame', roomcode)
-        }
-        
-    })
-
-    //now allows the player to enter their name
-    document.getElementById('entername').addEventListener('click', () => {
         let nickname = document.getElementById('nickname').value
 
-        if (nickname.length <= 12) {
-            socketsend(socket, 'namerelay', nickname)
+        if ((roomcode.length === 4) && (nickname.length <= 12) && (nickname.length > 0)) {
+            socketsend(socket, 'joingame', roomcode, nickname)
         }
         
     })
@@ -107,23 +98,12 @@ window.addEventListener('load', () => { //attach events to HTML elements here
                     roomcodeelement.innerHTML = roomcode
                     break;
                 case 'playerjoin'://when a player has joined 
-                    let newplayer = new Player(mssg.data)
-                    fellowplayers.push(newplayer)
+                    fellowplayers.push(mssg.data)
 
                     let listelement = document.getElementById('joiningplayers')
                     let entry = document.createElement('li')
-                    entry.appendChild(document.createTextNode('...'))
-                    entry.setAttribute('id', newplayer.id)
+                    entry.appendChild(document.createTextNode(mssg.data))
                     listelement.appendChild(entry)
-                    break;
-                case 'nameset'://when a player has set their name
-                    fellowplayers.forEach(p => {
-                        if (p.id === mssg.id) {
-                            p.name = mssg.data
-                        }
-                    })
-
-                    document.getElementById(mssg.id).innerHTML = mssg.data
                     break;
                 default:
                     console.log('Unidentifiable action')

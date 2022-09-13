@@ -14,8 +14,9 @@ const runninggames = new Map()
 
 function genroomcode() {
     const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+    let roomcode = ''
     do {
-        let roomcode = ''
+        roomcode = ''
         for (let i = 0; i < 4; i++) {
             roomcode += alphabet[Math.floor(Math.random() * 26)]//adds a random letter to the room code 4 times
         }
@@ -36,6 +37,7 @@ const requestListener = async function (req, res) {
         if( "/" == url[ url.length - 1 ] ) url += "index.html"
 
         const filecontents = await fs.readFile(__dirname + url)
+        
         switch( url.substr( url.length - 2 ) ) {//determines what type of file the client is requesting (i.e. css, js or html file)
             case "ss":
                 res.setHeader("Content-Type", "text/css")
@@ -88,21 +90,26 @@ function startserver() {
                     break;
                 case 'joingame': //adds player to the game they're trying to connect to
                     try {
-                        playerroomcode = mssg.data
-                        let room = runninggames.get(playerroomcode)
-                        let newplayer = new Player(ws)
-                        playerid = newplayer.id
-                        room.newplayer(newplayer)
+                        let room = runninggames.get(mssg.data)
+                        if (room.playerslist.size < 10) { 
+                            let newplayer
+                            if (room.playerslist.has(mssg.id)) {
+                                newplayer = mssg.id + "2"
+                            } else {
+                                newplayer = mssg.id
+                            }
+                            
+                            room.newplayer(newplayer, ws)
 
-                        socketsend(room.socket, 'playerjoin', newplayer.id)
-                        socketsend(ws, 'joinsuccess')
+                            socketsend(room.socket, 'playerjoin', newplayer)
+                            socketsend(ws, 'joinsuccess')
+                        } else {
+                            socketsend(ws, 'joinfail', 'room full')
+                        }
                     } catch(err) {
-                        socketsend(ws, 'joinfail')
+                        socketsend(ws, 'joinfail', 'room doesn\'t exist')
                         console.log(err)
                     }
-                    break;
-                case 'namerelay': //allows player to give themselves a nickname
-                    socketsend(runninggames.get(playerroomcode).socket, 'nameset', mssg.data, playerid)
                     break;
                 default:
                     console.log('Unidentifiable action')
