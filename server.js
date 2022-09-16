@@ -92,13 +92,10 @@ function startserver() {
                     try {
                         let room = runninggames.get(mssg.data)
                         if (room.playerslist.size < 10) { 
-                            let newplayer
-                            if (room.playerslist.has(mssg.id)) {
-                                newplayer = mssg.id + "2"
-                            } else {
-                                newplayer = mssg.id
-                            }
-                            
+                            let newplayer = mssg.id
+                            while (room.playerslist.has(newplayer)) {
+                                newplayer += "2"
+                            } 
                             room.newplayer(newplayer, ws)
 
                             socketsend(room.socket, 'playerjoin', newplayer)
