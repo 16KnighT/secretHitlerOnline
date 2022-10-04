@@ -6,8 +6,6 @@
 
 //import Player from './public/clientobjects.js'
 
-let fellowplayers = [] //stores the players - means that players can specify targets for their actions and the game can respond
-
 //
 //general functions
 //
@@ -77,6 +75,7 @@ window.addEventListener('load', () => { //attach events to HTML elements here
     document.getElementById('startgame').addEventListener('click', () => {
         const roomcodeelement = document.getElementById('roomcodeelement')
         let roomcode
+        let fellowplayers = [] //stores the players - means that players can specify targets for their actions and the game can respond
     
         console.log('game starting...')
         socket =  new WebSocket('ws://localhost:8000')

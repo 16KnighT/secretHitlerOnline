@@ -1,11 +1,20 @@
+:root {
+    --orange: #fcba6a;
+    --black: #434241;
+    --red: #e16d53;
+    --brown: #534d43;
+    --blue: #72bbe9;
+    --white: #f8e1c3;
+}
+
 .mainpage:not(#intropage) {
     display: none;
 }
 
 body {
     text-align: center;
-    background-color: #fcba6a;
-    color: #434241;
+    background-color: var(--orange);
+    color: var(--black);
     font-family: "courier-prime", Courier, sans-serif;
 }
 
@@ -25,8 +34,8 @@ h2, h1 {
 button {
     cursor: pointer;
     border: none;
-    color: #fcba6a;
-    background-color: #434241;
+    color: var(--orange);
+    background-color: var(--black);
     padding: 16.5px 35px;
     border-radius: 10px;
     font-family: "courier-prime", Courier, sans-serif;
@@ -39,7 +48,7 @@ button {
 
 button:hover {
     transform: translateY(4px);
-    box-shadow: 0 5px #434241;
+    box-shadow: 0 5px var(--black);
 }
 
 input {
@@ -59,9 +68,9 @@ input {
 #hostbutt {
     border-radius: 1px;
     padding: 95px 35px;
-    background-color: #e16d53;
-    border: 5px solid #534d43;
-    box-shadow: 0 9px #534d43;
+    background-color: var(--red);
+    border: 5px solid var(--brown);
+    box-shadow: 0 9px var(--brown);
     margin-bottom: 50px;
 }
 #hostbutt:hover {
@@ -71,17 +80,61 @@ input {
 
 #joinbutt {
     padding: 100px 35px;
-    background-color: #72bbe9;
+    background-color: var(--blue);
     border-radius: 25px;
-    box-shadow: 0 9px #534d43;
+    box-shadow: 0 9px var(--brown);
 }
 #joinbutt:hover {
     transform: translateY(4px);
-    box-shadow: 0 5px #72bbe9;
+    box-shadow: 0 5px var(--blue);
 }
 
 #roomcodeelement {
     font-size: 100px;
     font-weight: bold;
     margin: 10px;
+}
+
+.cards {
+    background-color: var(--black);
+    height: 150px;
+    width: 100px;
+    align-self: center;
+    justify-self: center;
+    justify-items: center;
+    color: var(--white)
+}
+
+.board {
+    display: grid;
+    height: 300px;
+}
+
+#gameboard {
+    grid-template-columns: 200px 1300px;
+    grid-template-rows: 300px 300px;
+    column-gap: 50px;
+    row-gap: 50px;
+    margin:100px;
+}
+
+#fboard {
+    display: grid;
+    grid-template-columns: repeat(6, 200px);
+    grid-template-rows: 300px;
+    background-color: var(--red);
+    align-items: center;
+    justify-items: center;
+    justify-content: space-between;
+
+}
+
+#lboard {
+    display: grid;
+    grid-template-columns: repeat(5, 200px);
+    grid-template-rows: 300px;
+    background-color: var(--blue);
+    align-items: center;
+    justify-items: center;
+    justify-content: space-between;
 }

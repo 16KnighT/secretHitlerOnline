@@ -74,8 +74,6 @@ function startserver() {
     })
 
     wss.on('connection', function connection(ws) {
-        let playerroomcode
-        let playerid
         ws.on('message', function message(mssg) {
 
             mssg = JSON.parse( mssg.toString() )
@@ -122,6 +120,3 @@ function startserver() {
 }
 
 startserver()
-
-
-
