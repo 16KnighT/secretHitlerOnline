@@ -7,7 +7,7 @@
     --white: #f8e1c3;
 }
 
-.mainpage:not(#intropage) {
+.mainpage:not(#gameboard) {
     display: none;
 }
 
@@ -111,14 +111,24 @@ input {
 }
 
 #gameboard {
-    grid-template-columns: 200px 1300px;
-    grid-template-rows: 300px 300px;
+    /*grid-template-columns: 200px 1300px;
+    grid-template-rows: 300px 300px;*/
+    grid-template-areas:
+        'header header header header header header header' 
+        'dr fasc fasc fasc fasc fasc ppl'
+        'di lib lib lib lib lib ppl';
     column-gap: 50px;
     row-gap: 50px;
     margin:100px;
 }
 
+#announcements {grid-area: header;}
+#drawpile {grid-area: dr;}
+#discardpile {grid-area: di;}
+#people {grid-area: ppl;}
+
 #fboard {
+    grid-area: fasc;
     display: grid;
     grid-template-columns: repeat(6, 200px);
     grid-template-rows: 300px;
@@ -130,6 +140,7 @@ input {
 }
 
 #lboard {
+    grid-area: lib;
     display: grid;
     grid-template-columns: repeat(5, 200px);
     grid-template-rows: 300px;

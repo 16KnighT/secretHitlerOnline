@@ -100,10 +100,18 @@ window.addEventListener('load', () => { //attach events to HTML elements here
                     fellowplayers.push(mssg.data)
 
                     let listelement = document.getElementById('joiningplayers')
-                    let entry = document.createElement('li')
-                    entry.appendChild(document.createTextNode(mssg.data))
-                    listelement.appendChild(entry)
+                    let entry1 = document.createElement('li')
+                    entry1.appendChild(document.createTextNode(mssg.data))
+                    listelement.appendChild(entry1)
                     break;
+                case 'vipbutton'://allows the fist player to start the game
+                    let buttonelement = document.getElementById('allplayersjoined')
+                    let entry2 = document.createElement('button')
+                    entry2.appendChild(document.createTextNode('government in session'))
+                    entry2.addEventListener('click', () => {
+                        socketsend(socket, 'allin')
+                    })
+                    buttonelement.appendChild(entry2)
                 default:
                     console.log('Unidentifiable action')
             }

@@ -89,7 +89,7 @@ function startserver() {
                 case 'joingame': //adds player to the game they're trying to connect to
                     try {
                         let room = runninggames.get(mssg.data)
-                        if (room.playerslist.size < 10) { 
+                        if (room.playerslist.size < 10 && room.isopen) { 
                             let newplayer = mssg.id
                             while (room.playerslist.has(newplayer)) {
                                 newplayer += "2"
@@ -98,6 +98,11 @@ function startserver() {
 
                             socketsend(room.socket, 'playerjoin', newplayer)
                             socketsend(ws, 'joinsuccess')
+
+                            if (room.playerslist.size === 1) {
+                                console.log([...room.playerslist][0])
+                                socketsend([...room.playerslist][0][1], "vipbutton")
+                            }
                         } else {
                             socketsend(ws, 'joinfail', 'room full')
                         }
