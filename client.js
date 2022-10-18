@@ -4,12 +4,12 @@
  * @param {string} pagename 
  */
 
-//import Player from './public/clientobjects.js'
+import {Game} from'./public/clientobjects.js'
 
 //
 //general functions
 //
-function openpage(pagename) {
+export function openpage(pagename) {
     for ( const el of document.getElementsByClassName("mainpage")) {
         el.style.display = 'none'
     }
@@ -30,6 +30,8 @@ window.addEventListener('load', () => { //attach events to HTML elements here
     })
 
     let socket
+    let roomcode
+    let nickname
 
     //when the user presses the "JOIN" button on the first page
     document.getElementById('joinbutt').addEventListener('click',() => {
@@ -53,6 +55,15 @@ window.addEventListener('load', () => { //attach events to HTML elements here
                     document.getElementById('roomcode').value = ""
                     document.getElementById('roomcode').placeholder = mssg.data
                     break;
+                case 'vipbutton'://allows the fist player to start the game
+                    let buttonelement = document.getElementById('allplayersjoined')
+                    let entry2 = document.createElement('button')
+                    entry2.appendChild(document.createTextNode('government in session'))
+                    entry2.addEventListener('click', () => {
+                        socketsend(socket, 'allin', roomcode)
+                    })
+                    buttonelement.appendChild(entry2)
+                    break;
                 default:
                     console.log('Unidentifiable action')
                 }
@@ -62,8 +73,8 @@ window.addEventListener('load', () => { //attach events to HTML elements here
     //when the user enters a room code it is sent to the server for them to join the room
     document.getElementById('entercode').addEventListener('click', () => {
         console.log('connecting to server...')
-        let roomcode = document.getElementById('roomcode').value.toUpperCase()
-        let nickname = document.getElementById('nickname').value
+        roomcode = document.getElementById('roomcode').value.toUpperCase()
+        nickname = document.getElementById('nickname').value
 
         if ((roomcode.length === 4) && (nickname.length <= 12) && (nickname.length > 0)) {
             socketsend(socket, 'joingame', roomcode, nickname)
@@ -73,8 +84,8 @@ window.addEventListener('load', () => { //attach events to HTML elements here
 
     //when the host presses the "START GAME" button it opens a websocket with the server
     document.getElementById('startgame').addEventListener('click', () => {
+        const game = new Game()
         const roomcodeelement = document.getElementById('roomcodeelement')
-        let roomcode
         let fellowplayers = [] //stores the players - means that players can specify targets for their actions and the game can respond
     
         console.log('game starting...')
@@ -104,14 +115,9 @@ window.addEventListener('load', () => { //attach events to HTML elements here
                     entry1.appendChild(document.createTextNode(mssg.data))
                     listelement.appendChild(entry1)
                     break;
-                case 'vipbutton'://allows the fist player to start the game
-                    let buttonelement = document.getElementById('allplayersjoined')
-                    let entry2 = document.createElement('button')
-                    entry2.appendChild(document.createTextNode('government in session'))
-                    entry2.addEventListener('click', () => {
-                        socketsend(socket, 'allin')
-                    })
-                    buttonelement.appendChild(entry2)
+                case 'gamestate':
+                    game.state()
+                    break;
                 default:
                     console.log('Unidentifiable action')
             }

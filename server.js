@@ -111,6 +111,13 @@ function startserver() {
                         console.log(err)
                     }
                     break;
+                case 'allin': //signifies all the players have joined
+                    let room = runninggames.get(mssg.data)
+                    if (room.playerslist.size <= 10 && room.playerslist.size >= 1) {
+                        room.privategame()
+                        socketsend(room.socket, 'gamestate')
+                    }
+                    break;
                 default:
                     console.log('Unidentifiable action')
 

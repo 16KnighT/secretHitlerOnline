@@ -7,7 +7,7 @@
     --white: #f8e1c3;
 }
 
-.mainpage:not(#gameboard) {
+.mainpage:not(#intropage) {
     display: none;
 }
 
@@ -108,11 +108,10 @@ input {
 .board {
     display: grid;
     height: 300px;
+    box-sizing: border-box;
 }
 
 #gameboard {
-    /*grid-template-columns: 200px 1300px;
-    grid-template-rows: 300px 300px;*/
     grid-template-areas:
         'header header header header header header header' 
         'dr fasc fasc fasc fasc fasc ppl'
@@ -131,7 +130,6 @@ input {
     grid-area: fasc;
     display: grid;
     grid-template-columns: repeat(6, 200px);
-    grid-template-rows: 300px;
     background-color: var(--red);
     align-items: center;
     justify-items: center;
@@ -143,9 +141,12 @@ input {
     grid-area: lib;
     display: grid;
     grid-template-columns: repeat(5, 200px);
-    grid-template-rows: 300px;
     background-color: var(--blue);
     align-items: center;
     justify-items: center;
     justify-content: space-between;
 }
+
+.president {font-weight: bold; color: var(--red)}
+.chancellor {font-weight: bold; color: var(--blue)}
+.dead {text-decoration: line-through}
