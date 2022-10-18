@@ -86,7 +86,6 @@ window.addEventListener('load', () => { //attach events to HTML elements here
     document.getElementById('startgame').addEventListener('click', () => {
         const game = new Game()
         const roomcodeelement = document.getElementById('roomcodeelement')
-        let fellowplayers = [] //stores the players - means that players can specify targets for their actions and the game can respond
     
         console.log('game starting...')
         socket =  new WebSocket('ws://localhost:8000')
@@ -108,7 +107,7 @@ window.addEventListener('load', () => { //attach events to HTML elements here
                     roomcodeelement.innerHTML = roomcode
                     break;
                 case 'playerjoin'://when a player has joined 
-                    fellowplayers.push(mssg.data)
+                    game.playerlist.push([mssg.data, null, null])
 
                     let listelement = document.getElementById('joiningplayers')
                     let entry1 = document.createElement('li')
