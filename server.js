@@ -78,17 +78,31 @@ function startserver() {
 
             mssg = JSON.parse( mssg.toString() )
             console.log(mssg);
+            let room
 
-            switch (mssg.action) { //creates a new game and adds it to a list
-                case 'startgame':
-                    let roomcode = genroomcode()
+            switch (mssg.action) { 
+                //commands sent by the game
+                case 'startgame'://creates a new game and adds it to a list
+                    const roomcode = genroomcode()
                     console.log(roomcode)
                     runninggames.set(roomcode, new Game(ws))
                     socketsend(ws, 'startgamesuccess', roomcode)
                     break;
+                case 'allin': //signifies all the players have joined
+                    room = runninggames.get(mssg.id)
+                    if (room.playerslist.size <= 10 && room.playerslist.size >= 1) {
+                        room.privategame()
+                        socketsend(room.socket, 'gamestate')
+                    }
+                    break;
+                case 'additionalinfo'://tells the player's screens to display something
+                    room = runninggames.get(mssg.id[0])
+                    socketsend(room.playerslist.get(mssg.id[1]), 'additionalinfo', mssg.data)
+                    break;
+                //messages sent by the player
                 case 'joingame': //adds player to the game they're trying to connect to
                     try {
-                        let room = runninggames.get(mssg.data)
+                        room = runninggames.get(mssg.data)
                         if (room.playerslist.size < 10 && room.isopen) { 
                             let newplayer = mssg.id
                             while (room.playerslist.has(newplayer)) {
@@ -99,7 +113,7 @@ function startserver() {
                             socketsend(room.socket, 'playerjoin', newplayer)
                             socketsend(ws, 'joinsuccess')
 
-                            if (room.playerslist.size === 1) {
+                            if (room.playerslist.size === 5) {
                                 console.log([...room.playerslist][0])
                                 socketsend([...room.playerslist][0][1], "vipbutton")
                             }
@@ -109,13 +123,6 @@ function startserver() {
                     } catch(err) {
                         socketsend(ws, 'joinfail', 'room doesn\'t exist')
                         console.log(err)
-                    }
-                    break;
-                case 'allin': //signifies all the players have joined
-                    let room = runninggames.get(mssg.data)
-                    if (room.playerslist.size <= 10 && room.playerslist.size >= 1) {
-                        room.privategame()
-                        socketsend(room.socket, 'gamestate')
                     }
                     break;
                 default:

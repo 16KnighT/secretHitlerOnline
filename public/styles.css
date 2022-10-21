@@ -7,7 +7,7 @@
     --white: #f8e1c3;
 }
 
-.mainpage:not(#intropage) {
+.mainpage:not(#intropage, #additionalinfo) {
     display: none;
 }
 

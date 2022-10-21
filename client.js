@@ -17,8 +17,8 @@ export function openpage(pagename) {
     document.getElementById(pagename).style.display = 'inline'
 }
 
-function socketsend(socket, action, data, id) {
-    socket.send(JSON.stringify( { 'action': action, 'data': data, 'id': id } ) )
+export function socketsend(socket, action, id, data) {
+    socket.send(JSON.stringify( { 'action': action, 'id': id, 'data': data} ) )
 }
 
 window.addEventListener('load', () => { //attach events to HTML elements here
@@ -61,9 +61,13 @@ window.addEventListener('load', () => { //attach events to HTML elements here
                     entry2.appendChild(document.createTextNode('government in session'))
                     entry2.addEventListener('click', () => {
                         socketsend(socket, 'allin', roomcode)
+                        entry2.remove()
                     })
                     buttonelement.appendChild(entry2)
                     break;
+                case 'additionalinfo':
+                    document.getElementById('additionalinfo').innerHTML  += mssg.data
+                    break
                 default:
                     console.log('Unidentifiable action')
                 }
@@ -77,18 +81,18 @@ window.addEventListener('load', () => { //attach events to HTML elements here
         nickname = document.getElementById('nickname').value
 
         if ((roomcode.length === 4) && (nickname.length <= 12) && (nickname.length > 0)) {
-            socketsend(socket, 'joingame', roomcode, nickname)
+            socketsend(socket, 'joingame', nickname, roomcode)
         }
         
     })
 
     //when the host presses the "START GAME" button it opens a websocket with the server
     document.getElementById('startgame').addEventListener('click', () => {
-        const game = new Game()
-        const roomcodeelement = document.getElementById('roomcodeelement')
-    
         console.log('game starting...')
         socket =  new WebSocket('ws://localhost:8000')
+
+        const game = new Game(socket)
+        const roomcodeelement = document.getElementById('roomcodeelement')
         socket.addEventListener('open', (mssg) => {
             console.log(mssg)
     
@@ -103,8 +107,8 @@ window.addEventListener('load', () => { //attach events to HTML elements here
     
             switch (mssg.action) {
                 case 'startgamesuccess'://successfully started game so the game can display the code
-                    roomcode = mssg.data
-                    roomcodeelement.innerHTML = roomcode
+                    game.roomcode = mssg.data
+                    roomcodeelement.innerHTML = mssg.data
                     break;
                 case 'playerjoin'://when a player has joined 
                     game.playerlist.push([mssg.data, null, null])

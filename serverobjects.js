@@ -20,6 +20,7 @@ class Game {
     }
 }
 
+/* unused
 class Player {
     constructor(socket) {
         this.socket = socket
@@ -27,6 +28,6 @@ class Player {
     }
     
 }
-
+*/
 module.exports.Game = Game
-module.exports.Player = Player
+//module.exports.Player = Player
