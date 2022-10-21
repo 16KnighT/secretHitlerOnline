@@ -17,6 +17,8 @@ export class Game {
         this.discard =['F', 'F', 'F', 'F', 'F', 'F', 'F', 'F', 'F', 'F', 'F', 'L', 'L', 'L', 'L', 'L', 'L']
         this.shuffle()
 
+        this.state = this.start
+
         this.playerlist = [] //stores the players as [[id, party, role], ...]
     }
 
@@ -27,7 +29,7 @@ export class Game {
         }
     }
 
-    state() {
+    start() {
         let gametype
         if (this.playerlist.length <= 6) {
             gametype = 0
@@ -98,6 +100,13 @@ export class Game {
             
         
         openpage('gameplay')
+
+        this.state = this.president
+        this.state()
+    }
+
+    president() {
+        console.log('start')
     }
 }
 

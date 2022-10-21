@@ -66,7 +66,11 @@ window.addEventListener('load', () => { //attach events to HTML elements here
                     buttonelement.appendChild(entry2)
                     break;
                 case 'additionalinfo':
-                    document.getElementById('additionalinfo').innerHTML  += mssg.data
+                    if (mssg.data === 'clear'){
+                        document.getElementById('additionalinfo').innerHTML = ''
+                    } else {
+                        document.getElementById('additionalinfo').innerHTML  += mssg.data
+                    }
                     break
                 default:
                     console.log('Unidentifiable action')
