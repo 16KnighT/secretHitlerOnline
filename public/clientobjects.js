@@ -4,6 +4,8 @@
 
 import {openpage, socketsend} from '/client.js'
 
+//these are the three different types of fascist board when playing secret hitler
+//an 'x' signifies no action would be taken if a policy is placed on it
 const boards = [['x', 'x', 'Policy Peek', 'Execution', 'Execution'],
     ['x', 'Investigate Loyalty', 'Call Special Election', 'Execution', 'Execution'],
     ['Investigate Loyalty', 'Investigate Loyalty', 'Call Special Election', 'Execution', 'Execution']]
@@ -11,7 +13,7 @@ const boards = [['x', 'x', 'Policy Peek', 'Execution', 'Execution'],
 export class Game {
     constructor(socket) {
         this.socket = socket
-        this.roomcode = ''
+        this.roomcode = '' //stores it's socket and room code so it can communicate with the server
 
         this.deck = []
         this.discard =['F', 'F', 'F', 'F', 'F', 'F', 'F', 'F', 'F', 'F', 'F', 'L', 'L', 'L', 'L', 'L', 'L']
@@ -22,15 +24,15 @@ export class Game {
         this.playerlist = [] //stores the players as [[id, party, role], ...]
     }
 
-    shuffle() {
+    shuffle() { //shuffles the discard pile into the draw pile
         let count = this.discard.length
         for (let card = 0; card < count; card++) {
             this.deck = this.deck.concat(this.discard.splice(Math.floor(Math.random() * this.discard.length),1))
         }
     }
 
-    start() {
-        let gametype
+    start() { //the initial game state which sets the game up
+        let gametype//gametype determines how many fascists there should be, if Hitler knows who the other fascists are what game board to use
         if (this.playerlist.length <= 6) {
             gametype = 0
         } else if (this.playerlist.length <= 8) {
@@ -46,7 +48,7 @@ export class Game {
             document.querySelector(`#fboard :nth-child(${index+1})`).textContent = element
         });
 
-        const roles = Array(this.playerlist.length).fill('').map((player, i) => {
+        const roles = Array(this.playerlist.length).fill('').map((player, i) => { //this simply creates a list with how many fascists and liberals there should be
             if (i >= gametype+2) {
                 return 'L'
             } else if (i === 0) {
@@ -56,12 +58,12 @@ export class Game {
             }
         })
 
-        for (let i = roles.length-1; i>0; i--) {
+        for (let i = roles.length-1; i>0; i--) {//this shuffles the roles so they can be randomly assigned
 
-            // Pick a remaining element.
+            //pick a remaining element
             let randomIndex = Math.floor(Math.random() * i);
         
-            // And swap it with the current element.
+            //and swap it with the current element
             [roles[i], roles[randomIndex]] = [
               roles[randomIndex], roles[i]];
           }

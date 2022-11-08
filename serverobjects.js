@@ -11,11 +11,11 @@ class Game {
         this.isopen = true
     }
 
-    newplayer (id, ws) {
+    newplayer (id, ws) {//adds a new player to the player list
         this.playerslist.set(id, ws)
     }
 
-    privategame() {
+    privategame() {//simply sets a variable to false which will now stop players from joining
         this.isopen = false
     }
 }

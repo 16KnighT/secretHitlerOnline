@@ -48,10 +48,10 @@ window.addEventListener('load', () => { //attach events to HTML elements here
             console.log(mssg.action)
             
             switch (mssg.action) {
-                case 'joinsuccess':
+                case 'joinsuccess'://if the server confirms the player has successfully joined, it will be confirmed to the player
                     openpage('confirmation')
                     break;
-                case 'joinfail':
+                case 'joinfail'://if they fail to join, they will be shown a reason to why
                     document.getElementById('roomcode').value = ""
                     document.getElementById('roomcode').placeholder = mssg.data
                     break;
@@ -65,7 +65,7 @@ window.addEventListener('load', () => { //attach events to HTML elements here
                     })
                     buttonelement.appendChild(entry2)
                     break;
-                case 'additionalinfo':
+                case 'additionalinfo'://this appends information to the bottom of the screen which can be kept static, even while the page changes
                     if (mssg.data === 'clear'){
                         document.getElementById('additionalinfo').innerHTML = ''
                     } else {
@@ -122,7 +122,7 @@ window.addEventListener('load', () => { //attach events to HTML elements here
                     entry1.appendChild(document.createTextNode(mssg.data))
                     listelement.appendChild(entry1)
                     break;
-                case 'gamestate':
+                case 'gamestate'://whenever the game progresses, this will be called
                     game.state()
                     break;
                 default:
