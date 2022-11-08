@@ -111,7 +111,3 @@ export class Game {
         console.log('start')
     }
 }
-
-export class Player {
-
-}
