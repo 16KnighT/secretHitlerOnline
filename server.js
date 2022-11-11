@@ -78,7 +78,6 @@ function startserver() {
 
             mssg = JSON.parse( mssg.toString() )
             console.log(mssg);
-            let room
 
             switch (mssg.action) { 
                 //commands sent by the game
@@ -88,21 +87,23 @@ function startserver() {
                     runninggames.set(roomcode, new Game(ws))
                     socketsend(ws, 'startgamesuccess', roomcode)
                     break;
-                case 'allin': //signifies all the players have joined
-                    room = runninggames.get(mssg.id)
+                case 'allin': { //signifies all the players have joined
+                    const room = runninggames.get(mssg.id)
                     if (room.playerslist.size <= 10 && room.playerslist.size >= 1) {
                         room.privategame()
                         socketsend(room.socket, 'gamestate')
                     }
                     break;
-                case 'additionalinfo'://tells the player's screens to display something
-                    room = runninggames.get(mssg.id[0])
+                }
+                case 'additionalinfo': { //tells the player's screens to display something
+                    const room = runninggames.get(mssg.id[0])
                     socketsend(room.playerslist.get(mssg.id[1]), 'additionalinfo', mssg.data)
                     break;
+                }
                 //messages sent by the player
-                case 'joingame': //adds player to the game they're trying to connect to
+                case 'joingame': { //adds player to the game they're trying to connect to
                     try {
-                        room = runninggames.get(mssg.data)
+                        const room = runninggames.get(mssg.data)
                         if (room.playerslist.size < 10 && room.isopen) { 
                             let newplayer = mssg.id
                             while (room.playerslist.has(newplayer)) {
@@ -125,6 +126,7 @@ function startserver() {
                         console.log(err)
                     }
                     break;
+                }
                 default:
                     console.log('Unidentifiable action')
 
