@@ -7,7 +7,7 @@
     --white: #f8e1c3;
 }
 
-.mainpage:not(#intropage, #additionalinfo) {
+.mainpage:not(#gameplay, #additionalinfo) {
     display: none;
 }
 
