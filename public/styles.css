@@ -7,7 +7,7 @@
     --white: #f8e1c3;
 }
 
-.mainpage:not(#gameplay, #additionalinfo) {
+.mainpage:not(#intropage, #additionalinfo) {
     display: none;
 }
 
@@ -109,22 +109,29 @@ input {
     display: grid;
     height: 300px;
     box-sizing: border-box;
+    min-height: 0;
 }
 
 #gameboard {
     grid-template-areas:
-        'header header header header header header header' 
         'dr fasc fasc fasc fasc fasc ppl'
-        'di lib lib lib lib lib ppl';
+        'di lib lib lib lib lib vote';
     column-gap: 50px;
     row-gap: 50px;
     margin:100px;
 }
 
-#announcements {grid-area: header;}
 #drawpile {grid-area: dr;}
 #discardpile {grid-area: di;}
 #people {grid-area: ppl;}
+#votes {grid-area: vote;}
+
+#record {
+    overflow: hidden;
+    text-align: left;
+    display: block;
+    height: 125px;
+}
 
 #fboard {
     grid-area: fasc;

@@ -51,7 +51,7 @@ const requestListener = async function (req, res) {
         
         res.writeHead(200)
         res.end(filecontents)
-    } catch( e ) {
+    } catch( e ) { //tells the user there has been an error
 
         if( e && e.code == "ENOENT" ) {
             res.writeHead( 404 )
@@ -73,8 +73,8 @@ function startserver() {
         console.log(`Server is running on http://${host}:${port}`);
     })
 
-    wss.on('connection', function connection(ws) {
-        ws.on('message', function message(mssg) {
+    wss.on('connection', function connection(ws) { //on each websocket connection...
+        ws.on('message', function message(mssg) { //listen for messages
 
             mssg = JSON.parse( mssg.toString() )
             console.log(mssg);
@@ -104,22 +104,22 @@ function startserver() {
                 case 'joingame': { //adds player to the game they're trying to connect to
                     try {
                         const room = runninggames.get(mssg.data)
-                        if (room.playerslist.size < 10 && room.isopen) { 
+                        if (room.playerslist.size < 10 && room.isopen) { //checks the room is open for more players
                             let newplayer = mssg.id
-                            while (room.playerslist.has(newplayer)) {
+                            while (room.playerslist.has(newplayer)) { //adds a 2 onto the player's if it isn't unique
                                 newplayer += "2"
                             } 
                             room.newplayer(newplayer, ws)
 
                             socketsend(room.socket, 'playerjoin', newplayer)
-                            socketsend(ws, 'joinsuccess')
+                            socketsend(ws, 'joinsuccess', newplayer) //username sent back incase the server has changed it
 
                             if (room.playerslist.size === 5) {
                                 console.log([...room.playerslist][0])
                                 socketsend([...room.playerslist][0][1], "vipbutton")
                             }
-                        } else {
-                            socketsend(ws, 'joinfail', 'room full')
+                        } else { //if it can't accept the player it will return the reason
+                            room.isopen ? socketsend(ws, 'joinfail', 'room full') : socketsend(ws, 'joinfail', 'game started')
                         }
                     } catch(err) {
                         socketsend(ws, 'joinfail', 'room doesn\'t exist')
@@ -127,9 +127,18 @@ function startserver() {
                     }
                     break;
                 }
+                case 'buttonoption': {
+                    const room = runninggames.get(mssg.id[0])
+                    socketsend(room.playerslist.get(mssg.id[1]), 'buttonoption', mssg.data)
+                    break;
+                }
+                case 'gamestate': {
+                    const room = runninggames.get(mssg.id)
+                    socketsend(room.socket, 'gamestate', mssg.data)
+                    break;
+                }
                 default:
                     console.log('Unidentifiable action')
-
             }
         });
         setTimeout(() => { //displays running games after someone joins

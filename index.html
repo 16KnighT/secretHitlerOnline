@@ -6,8 +6,9 @@
         <title>secret secret</title>
     </head>
     <body>
+        <h1 id="announcements">SECRET HITLER ONLINE</h1>
+
         <div id="intropage" class="mainpage">
-            <h1>SECRET HITLER ONLINE</h1>
             <div class = "input-boxes">
                 <p>Secret Hitler is a hidden role game for 5-10 players</p> <br>
                 <button type="button" id="hostbutt">host game</button>
@@ -16,7 +17,6 @@
         </div>
 
         <div id="gamemenu" class="mainpage">
-            <h1>SECRET HITLER ONLINE</h1>
             <p>Secret Hitler is a hidden role game for 5-10 players</p> <br>
             <div class = "input-boxes">
                 <button type="button" id="startgame">start</button> <br> <br>
@@ -25,28 +25,23 @@
         </div>
 
         <div id="gamelobby" class = "mainpage">
-            <h1>ROOM CODE</h1>
             <p id="roomcodeelement"></p>
             <ol id="joiningplayers"></ol>
         </div>
 
         <div id="joingame" class="mainpage">
-            <h1>SECRET HITLER ONLINE</h1>
             <p>Secret Hitler is a hidden role game for 5-10 players</p> <br>
             <input type="text" placeholder="EINTRETEN YOUR ROOM CODE" maxlength="4" id="roomcode"><br><br>
             <input type="text" placeholder="EINTRETEN YOUR NAME" maxlength="12" id="nickname"><br><br>
             <button type="submit" id="entercode">enter</button>
         </div>
 
-        <div id="confirmation" class="mainpage">
-            <h1>U HAV JOYNED</h1>
-            <div id="allplayersjoined"></div>
-            <p>role assignment will commence shortly</p>
+        <div id="playergameplay" class="mainpage">
+
         </div>
 
         <div id="gameplay" class="mainpage">
             <div id="gameboard" class="board">
-                <h1 id="announcements">game start</h1>
                 <div class="cards" id="drawpile">
                     DRAW
                     <h2>17</h2>
@@ -74,6 +69,10 @@
                     <div>X</div>
                     <div>X</div>
                     <h2>LIBERALS<br>WIN</h2>
+                </div>
+                <div id="votes">
+                    <h3>voting record</h3>
+                    <div id="record"></div>
                 </div>
             </div>
         </div>

@@ -20,6 +20,10 @@ export function socketsend(socket, action, id, data) {
     socket.send(JSON.stringify( { 'action': action, 'id': id, 'data': data} ) )
 }
 
+export function announce(announcement) {
+    document.getElementById('announcements').innerHTML = announcement
+}
+
 window.addEventListener('load', () => { //attach events to HTML elements here
     console.log("hi")
 
@@ -48,29 +52,63 @@ window.addEventListener('load', () => { //attach events to HTML elements here
             
             switch (mssg.action) {
                 case 'joinsuccess'://if the server confirms the player has successfully joined, it will be confirmed to the player
-                    openpage('confirmation')
+                    openpage('playergameplay')
+                    announce('you have joined')
+                    nickname = mssg.data
                     break;
                 case 'joinfail'://if they fail to join, they will be shown a reason to why
                     document.getElementById('roomcode').value = ""
                     document.getElementById('roomcode').placeholder = mssg.data
                     break;
-                case 'vipbutton'://allows the fist player to start the game
-                    let buttonelement = document.getElementById('allplayersjoined')
-                    let entry2 = document.createElement('button')
-                    entry2.appendChild(document.createTextNode('government in session'))
-                    entry2.addEventListener('click', () => {
+                case 'vipbutton': {//allows the fist player to start the game
+                    let gameplayspace = document.getElementById('playergameplay')
+                    let entry = document.createElement('button')
+                    entry.appendChild(document.createTextNode('government in session'))
+                    entry.addEventListener('click', () => {
                         socketsend(socket, 'allin', roomcode)
-                        entry2.remove()
+                        entry.remove()
                     })
-                    buttonelement.appendChild(entry2)
+                    gameplayspace.appendChild(entry)
                     break;
-                case 'additionalinfo'://this appends information to the bottom of the screen which can be kept static, even while the page changes
-                    if (mssg.data === 'clear'){
-                        document.getElementById('additionalinfo').innerHTML = ''
-                    } else {
+                }
+                case 'buttonoption': {
+                    //removes all current buttons (if there's been an error and they haven't been cleared already)
+                    document.querySelectorAll('.multichoice').forEach(choice => {
+                        choice.remove()
+                    })
+
+                    announce('choose')
+
+                    let gameplayspace = document.getElementById('playergameplay')
+                    mssg.data.forEach(option => {
+                        //creates a button followed by two breaklines for each option
+                        let entry = document.createElement('button')
+                        let breakline1 = document.createElement('br')
+                        let breakline2 = document.createElement('br')
+                        breakline1.classList.add('multichoice')
+                        breakline2.classList.add('multichoice')
+
+                        entry.appendChild(document.createTextNode(option))
+                        entry.classList.add('multichoice') //adds options to the multichoice class so they can be removed later
+                        entry.addEventListener('click', () => {
+                            socketsend(socket, 'gamestate', roomcode, [nickname, option])
+                            announce('interesting...')
+                            document.querySelectorAll('.multichoice').forEach(choice => {
+                                choice.remove()
+                            })
+                        })
+                        gameplayspace.appendChild(entry)
+                        gameplayspace.appendChild(breakline1)
+                        gameplayspace.appendChild(breakline2)
+                    })
+                    break;
+                }
+                case 'additionalinfo': //this appends information to the bottom of the screen which can be kept static, even while the page changes
                         document.getElementById('additionalinfo').innerHTML  += mssg.data
-                    }
-                    break
+                        setTimeout(() => {
+                            document.getElementById('additionalinfo').innerHTML = ''
+                        }, 5000)
+                    break;
                 default:
                     console.log('Unidentifiable action')
                 }
@@ -100,6 +138,7 @@ window.addEventListener('load', () => { //attach events to HTML elements here
             console.log(mssg)
     
             openpage('gamelobby')
+            announce('ROOM CODE')
             socketsend(socket, 'startgame')
         })
         
@@ -120,9 +159,15 @@ window.addEventListener('load', () => { //attach events to HTML elements here
                     let entry1 = document.createElement('li')
                     entry1.appendChild(document.createTextNode(mssg.data))
                     listelement.appendChild(entry1)
+
+                    listelement = document.getElementById('people')
+                    let entry2 = document.createElement('li')
+                    entry2.appendChild(document.createTextNode(mssg.data))
+                    entry2.setAttribute('id', mssg.data)
+                    listelement.appendChild(entry2)
                     break;
                 case 'gamestate'://whenever the game progresses, this will be called
-                    game.state()
+                    game.state(mssg.data)
                     break;
                 default:
                     console.log('Unidentifiable action')

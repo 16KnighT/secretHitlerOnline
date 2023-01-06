@@ -2,7 +2,7 @@
  * Player object used in game code
  */
 
-import {openpage, socketsend} from '/client.js'
+import {openpage, socketsend, announce} from '/client.js'
 
 //these are the three different types of fascist board when playing secret hitler
 //an 'x' signifies no action would be taken if a policy is placed on it
@@ -18,6 +18,11 @@ export class Game {
         this.deck = []
         this.discard =['F', 'F', 'F', 'F', 'F', 'F', 'F', 'F', 'F', 'F', 'F', 'L', 'L', 'L', 'L', 'L', 'L']
         this.shuffle()
+
+        this.currentpresident
+        this.nextpresident = 0
+        this.chancellor
+        this.tally = []
 
         this.state = this.start
 
@@ -71,11 +76,6 @@ export class Game {
         //set up the list of people and gives them their role
         let listelement = document.getElementById('people')
         this.playerlist.forEach((player, i) => {
-            let entry = document.createElement('li')
-            entry.appendChild(document.createTextNode(player[0]))
-            entry.setAttribute('id', player[0])
-            listelement.appendChild(entry)
-
             if (roles[i] === 'L') {
                     this.playerlist[i][1] = this.playerlist[i][2] = 'Liberal'
             } else {
@@ -93,7 +93,7 @@ export class Game {
         fascists.forEach(player => {
             if ((gametype === 0 && player[2] === 'Hitler') || (player[2] === 'Fascist')) {
                 socketsend(this.socket, 'additionalinfo', [this.roomcode, player[0]], fascists.map(fascist => {
-                    if (player !== fascist) {
+                    if (player !== fascist) {//does not return that the receiving player is a fascist as they already know
                         return `${fascist[0]} is ${fascist[2]}<br>`
                     }
                 }).join(''))
@@ -102,12 +102,93 @@ export class Game {
             
         
         openpage('gameplay')
-
-        this.state = this.president
-        this.state()
+        setTimeout(() => {
+            this.state = this.president
+            this.newpresident()
+        }, 5000)
     }
 
-    president() {
-        console.log('start')
+    newpresident() {
+        //using try catcher as during first run, no elements will have the class so .remove() will cause an error
+        try { //removes current president and chancellor from the display
+            document.querySelector('.president').classList.remove('president')
+            document.querySelector('.chancellor').classList.remove('chancellor')
+        } finally {
+            this.currentpresident = this.playerlist[this.nextpresident][0]
+            this.nextpresident++
+
+            document.getElementById(this.currentpresident).classList.add('president')
+            announce(`${this.currentpresident} is the president`)
+
+            socketsend(this.socket, 'buttonoption', [this.roomcode, this.currentpresident], this.playerlist.map(player => player[0]).filter(player => player !== this.currentpresident))
+        }
+    }
+
+    president(candidate) {
+        console.log(candidate[1])
+        announce(`${candidate[1]} has been proposed as chancellor`)
+        document.getElementById(candidate[1]).classList.add('chancellor')
+
+        document.getElementById('record').innerHTML += `vote on ${candidate[1]}`
+        this.chancellor = candidate[1]
+
+        this.tally = []
+        this.state = this.election
+        this.playerlist.map(player => player[0]).forEach(id => {
+            socketsend(this.socket, 'buttonoption', [this.roomcode, id], ['Ja!', 'Nein!'])
+        })
+    }
+
+    election(vote) {
+        console.log(this.tally.map(e => e[0]))
+        console.log(vote[0])
+        if (!(this.tally.map(e => e[0]).includes(vote[0]))) { //checks if player has already voted
+            this.tally.push(vote)//adds their vote if they havent
+            console.log(this.tally)
+        }
+
+        if (this.tally.length === this.playerlist.length) {
+            announce('vote complete')
+            setTimeout(() => {
+                let votes = ''
+                this.tally.forEach(e => {
+                    votes += `${e[0]} voted ${e[1]}<br>`
+                })
+
+                let record = document.getElementById('record')
+                record.innerHTML += `vote on ${this.chancellor}<br>${votes}`
+                record.scrollTo(0, record.scrollHeight)
+                if (this.tally.filter(e => e[1] === 'Ja!').length > this.playerlist.length/2) {
+                    announce('election won')
+                    this.state = this.presidentdiscard
+                } else {
+                    announce('election failed')
+                }
+            },5000)
+        }
+    }
+
+    presidentdiscard() {
+
+    }
+
+    chancellordiscard() {
+
+    }
+
+    veto() {
+
+    }
+
+    investigate() {
+
+    }
+
+    spelection() {
+
+    }
+
+    execute() {
+        
     }
 }
