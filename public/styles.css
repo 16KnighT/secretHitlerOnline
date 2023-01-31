@@ -96,13 +96,13 @@ input {
 }
 
 .cards {
-    background-color: var(--black);
+    background-color: var(--white);
     height: 150px;
     width: 100px;
     align-self: center;
     justify-self: center;
     justify-items: center;
-    color: var(--white)
+    color: var(--orange);
 }
 
 .board {
@@ -130,7 +130,7 @@ input {
     overflow: hidden;
     text-align: left;
     display: block;
-    height: 125px;
+    height: 300px;
 }
 
 #fboard {

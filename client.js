@@ -77,7 +77,8 @@ window.addEventListener('load', () => { //attach events to HTML elements here
                         choice.remove()
                     })
 
-                    announce('choose')
+                    console.log(mssg.data)
+                    announce(mssg.data.pop())
 
                     let gameplayspace = document.getElementById('playergameplay')
                     mssg.data.forEach(option => {

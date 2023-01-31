@@ -19,10 +19,16 @@ export class Game {
         this.discard =['F', 'F', 'F', 'F', 'F', 'F', 'F', 'F', 'F', 'F', 'F', 'L', 'L', 'L', 'L', 'L', 'L']
         this.shuffle()
 
-        this.currentpresident
-        this.nextpresident = 0
+        this.currentpresident //stores the id of the current president
+        this.nextpresident = 0 //stores the index of the next president
         this.chancellor
+        this.previousgovernment = []
+
         this.tally = []
+        this.cardvalidation = []
+
+        this.fpolicies = 0
+        this.lpolicies = 0
 
         this.state = this.start
 
@@ -34,6 +40,12 @@ export class Game {
         for (let card = 0; card < count; card++) {
             this.deck = this.deck.concat(this.discard.splice(Math.floor(Math.random() * this.discard.length),1))
         }
+        this.updatecardpiles()
+    }
+
+    updatecardpiles() { //update the html of the card piles to represent the no. cards in each
+        document.getElementById('drawpile').innerHTML = this.deck.length
+        document.getElementById('discardpile').innerHTML = this.discard.length
     }
 
     start() { //the initial game state which sets the game up
@@ -74,7 +86,6 @@ export class Game {
           }
 
         //set up the list of people and gives them their role
-        let listelement = document.getElementById('people')
         this.playerlist.forEach((player, i) => {
             if (roles[i] === 'L') {
                     this.playerlist[i][1] = this.playerlist[i][2] = 'Liberal'
@@ -107,7 +118,7 @@ export class Game {
             this.newpresident()
         }, 5000)
     }
-
+    //functions and procedures
     newpresident() {
         //using try catcher as during first run, no elements will have the class so .remove() will cause an error
         try { //removes current president and chancellor from the display
@@ -119,24 +130,38 @@ export class Game {
 
             document.getElementById(this.currentpresident).classList.add('president')
             announce(`${this.currentpresident} is the president`)
+            let playernames = this.playerlist.map(player => player[0]).filter(player => (player !== this.currentpresident) && !(this.previousgovernment.includes(player)))
+            playernames.push('choose your chancellor')
 
-            socketsend(this.socket, 'buttonoption', [this.roomcode, this.currentpresident], this.playerlist.map(player => player[0]).filter(player => player !== this.currentpresident))
+            socketsend(this.socket, 'buttonoption', [this.roomcode, this.currentpresident], playernames)
         }
     }
 
+    sendpolicies(target) {
+        let cardmessage = [this.cardvalidation, 'choose one to DISCARD'].flat()
+        console.log(cardmessage)
+        socketsend(this.socket, 'buttonoption', [this.roomcode, target], cardmessage)
+    }
+
+    //game states
     president(candidate) {
-        console.log(candidate[1])
-        announce(`${candidate[1]} has been proposed as chancellor`)
-        document.getElementById(candidate[1]).classList.add('chancellor')
+        if (candidate[0] === this.currentpresident && !(this.previousgovernment.includes(candidate[1])) && candidate[1] !== this.currentpresident) {//checks if the current president sent the message AND if the choice was eligible AND if they aren't electing themself
+            console.log(candidate[1])
+            announce(`${candidate[1]} has been proposed as chancellor`)
+            document.getElementById(candidate[1]).classList.add('chancellor')
 
-        document.getElementById('record').innerHTML += `vote on ${candidate[1]}`
-        this.chancellor = candidate[1]
+            document.getElementById('record').innerHTML += `<br>vote on ${candidate[1]}<br>`
+            this.chancellor = candidate[1]
 
-        this.tally = []
-        this.state = this.election
-        this.playerlist.map(player => player[0]).forEach(id => {
-            socketsend(this.socket, 'buttonoption', [this.roomcode, id], ['Ja!', 'Nein!'])
-        })
+            this.tally = []//sets the tally to 0
+            this.state = this.election
+            this.playerlist.map(player => player[0]).forEach(id => {
+                socketsend(this.socket, 'buttonoption', [this.roomcode, id], ['Ja!', 'Nein!', 'vote'])
+            })
+        } else if (candidate[0] === this.currentpresident) {//condition is true if the president sent an uneligble candidate
+            let playernames = this.playerlist.map(player => player[0]).filter(player => (player !== this.currentpresident) || !(this.previousgovernment.includes(player)))
+            socketsend(this.socket, 'buttonoption', [this.roomcode, this.currentpresident], playernames)
+        }
     }
 
     election(vote) {
@@ -156,24 +181,96 @@ export class Game {
                 })
 
                 let record = document.getElementById('record')
-                record.innerHTML += `vote on ${this.chancellor}<br>${votes}`
+                record.innerHTML += `${votes}`
                 record.scrollTo(0, record.scrollHeight)
-                if (this.tally.filter(e => e[1] === 'Ja!').length > this.playerlist.length/2) {
+                if (this.tally.filter(e => e[1] === 'Ja!').length > this.playerlist.length/2) {//checks a majority have voted in favour
                     announce('election won')
+                    this.previousgovernment = [this.currentpresident, this.chancellor]
+
                     this.state = this.presidentdiscard
+                    if (this.deck.length < 3) {//shuffles deck if there's less than 3 policies left
+                        announce('shuffling the deck...')
+                        setTimeout(this.shuffle(), 2000)
+                    }
+                    this.cardvalidation = this.deck.splice(0,3)//cards drawn are stored server-side to prevent cheating
+                    console.log(this.cardvalidation)
+                    this.sendpolicies(this.currentpresident)
                 } else {
                     announce('election failed')
+                    //ADD ELECTION TRACKER AFTER YOU HAVE IMPLEMENTED POLICY SUTFF
+                    this.state = this.president
+                    this.newpresident()
                 }
             },5000)
         }
     }
 
-    presidentdiscard() {
-
+    presidentdiscard(discarding) {
+        //ADD ABILITY TO VETO LATER
+        if (this.cardvalidation.includes(discarding[1]) && discarding[0] === this.currentpresident) { //double checks that the chosen policy was an actual choice
+            this.state = this.chancellordiscard
+            this.cardvalidation.splice(this.cardvalidation.indexOf(discarding[1]), 1) //removes specified element from array
+            this.sendpolicies(this.chancellor)
+        } else {
+            this.sendpolicies(this.currentpresident) //if not, it will resend the choices
+        }
     }
 
-    chancellordiscard() {
+    chancellordiscard(discarding) {
+        if (this.cardvalidation.includes(discarding[1]) && discarding[0] === this.chancellor) { //double checks that the chosen policy was an actual choice
+            this.cardvalidation.splice(this.cardvalidation.indexOf(discarding[1]), 1) //removes specified element from array
 
+            if (this.cardvalidation[0] === 'L') {
+                this.lpolicies++
+
+                if (this.lpolicies === 5){
+                    openpage('additionalinfo')
+                    announce('LIBERALS WIN') //DEVELOP WIN CONDITION LATER
+                } else {
+                    //updates gameboard
+                    let targettile = document.querySelector(`#lboard :nth-child(${this.lpolicies})`)
+                    targettile.textContent = ''
+                    targettile.classList.add('cards')
+
+                    this.state = this.president
+                    this.newpresident()
+                }
+            } else {
+                this.fpolicies++
+
+                if (this.fpolicies === 6){
+                    openpage('additionalinfo')
+                    announce('FASCISTS WIN')//DEVELOP WIN CONDITION LATER
+                } else {
+                    //updates gameboard
+                    let targettile = document.querySelector(`#fboard :nth-child(${this.fpolicies})`)
+                    let boardaction = targettile.textContent
+                    targettile.textContent = ''
+                    targettile.classList.add('cards')
+
+                    switch (boardaction) {
+                        case 'Policy Peek':
+                            announce(boardaction)
+                            break;
+                        case 'Execution':
+                            announce(boardaction)
+                            break;
+                        case 'Investigate Loyalty':
+                            announce(boardaction)
+                            break;
+                        case 'Call Special Election':
+                            announce(boardaction)
+                            break;
+                        default:
+                            this.state = this.president
+                            this.newpresident()
+                            break;
+                    }
+                }
+            }
+        } else {
+            this.sendpolicies(this.chancellor) //if not, it will resend the choices
+        }
     }
 
     veto() {
