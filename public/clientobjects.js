@@ -6,6 +6,8 @@ import {openpage, socketsend, announce} from '/client.js'
 
 //these are the three different types of fascist board when playing secret hitler
 //an 'x' signifies no action would be taken if a policy is placed on it
+const pausetime = 0
+
 const boards = [['x', 'x', 'Policy Peek', 'Execution', 'Execution'],
     ['x', 'Investigate Loyalty', 'Call Special Election', 'Execution', 'Execution'],
     ['Investigate Loyalty', 'Investigate Loyalty', 'Call Special Election', 'Execution', 'Execution']]
@@ -24,6 +26,7 @@ export class Game {
         this.chancellor
         this.previousgovernment = []
 
+        this.electiontracker = 0
         this.tally = []
         this.cardvalidation = []
 
@@ -94,7 +97,7 @@ export class Game {
                 this.playerlist[i][2] = roles[i] === 'H' ? 'Hitler' : 'Fascist'
             }
 
-            socketsend(this.socket, 'additionalinfo', [this.roomcode, this.playerlist[i][0]], `You are ${this.playerlist[i][2]}<br>`)
+            socketsend(this.socket, 'additionalinfo', [this.roomcode, this.playerlist[i][0]], `<h1>You are ${this.playerlist[i][2]}</h1><br>`)
         })
 
         //creates a temporary list of all fascists so they can be sent who other fascists are
@@ -116,17 +119,44 @@ export class Game {
         setTimeout(() => {
             this.state = this.president
             this.newpresident()
-        }, 5000)
+        }, pausetime)
     }
     //functions and procedures
     newpresident() {
-        //using try catcher as during first run, no elements will have the class so .remove() will cause an error
+        if (this.deck.length < 3) {//shuffles deck if there's less than 3 policies left
+            announce('shuffling the deck...')
+            this.shuffle()
+        }
+
+        if (this.electiontracker >= 3) {
+            announce('political chaos from too many failed governments!')
+            this.electiontracker = 0
+            this.previousgovernment = []
+            const emergencycard = this.deck.splice(1,1)
+            let targettile = document.querySelector(`#fboard :nth-child(${
+                emergencycard === 'F' ? this.fpolicies : this.lpolicies
+            })`)
+            targettile.classList.add('cards')
+            
+
+            if (this.deck.length < 3) {//shuffles deck if there's less than 3 policies left
+                announce('shuffling the deck...')
+                this.shuffle()
+            }
+    
+        }
+
+         //using try catcher as during first run, no elements will have the class so .remove() will cause an error
         try { //removes current president and chancellor from the display
             document.querySelector('.president').classList.remove('president')
             document.querySelector('.chancellor').classList.remove('chancellor')
         } finally {
             this.currentpresident = this.playerlist[this.nextpresident][0]
             this.nextpresident++
+            
+            if (this.nextpresident === this.playerlist.length) {
+                this.nextpresident = 0
+            }
 
             document.getElementById(this.currentpresident).classList.add('president')
             announce(`${this.currentpresident} is the president`)
@@ -188,20 +218,18 @@ export class Game {
                     this.previousgovernment = [this.currentpresident, this.chancellor]
 
                     this.state = this.presidentdiscard
-                    if (this.deck.length < 3) {//shuffles deck if there's less than 3 policies left
-                        announce('shuffling the deck...')
-                        setTimeout(this.shuffle(), 2000)
-                    }
+    
                     this.cardvalidation = this.deck.splice(0,3)//cards drawn are stored server-side to prevent cheating
+                    this.updatecardpiles()
                     console.log(this.cardvalidation)
                     this.sendpolicies(this.currentpresident)
                 } else {
                     announce('election failed')
-                    //ADD ELECTION TRACKER AFTER YOU HAVE IMPLEMENTED POLICY SUTFF
+                    this.electiontracker++
                     this.state = this.president
                     this.newpresident()
                 }
-            },5000)
+            },pausetime)
         }
     }
 
@@ -210,6 +238,12 @@ export class Game {
         if (this.cardvalidation.includes(discarding[1]) && discarding[0] === this.currentpresident) { //double checks that the chosen policy was an actual choice
             this.state = this.chancellordiscard
             this.cardvalidation.splice(this.cardvalidation.indexOf(discarding[1]), 1) //removes specified element from array
+            this.discard.push(discarding[1])
+
+            this.updatecardpiles()
+            if (this.fpolicies >= 5) {
+                this.cardvalidation.splice(2, 0, 'veto') //inserts a veto option if there are more than 5 fascist policies
+            }
             this.sendpolicies(this.chancellor)
         } else {
             this.sendpolicies(this.currentpresident) //if not, it will resend the choices
@@ -217,10 +251,15 @@ export class Game {
     }
 
     chancellordiscard(discarding) {
-        if (this.cardvalidation.includes(discarding[1]) && discarding[0] === this.chancellor) { //double checks that the chosen policy was an actual choice
+        if (this.cardvalidation.includes(discarding[1]) && discarding[0] === this.chancellor) { //double checks that the chosen policy was an actual choice or if the veto was availabile
             this.cardvalidation.splice(this.cardvalidation.indexOf(discarding[1]), 1) //removes specified element from array
-
-            if (this.cardvalidation[0] === 'L') {
+            this.discard.push(discarding[1])
+            this.updatecardpiles()
+            if (discarding === 'veto') {
+                announce('the chancellor vetoed')
+                this.state = this.veto
+                socketsend(this.socket, 'buttonoption', [this.roomcode, this.currentpresident], ['Ja!', 'nein.', 'approve veto?'])
+            } else if (this.cardvalidation[0] === 'L') {
                 this.lpolicies++
 
                 if (this.lpolicies === 5){
@@ -251,16 +290,39 @@ export class Game {
                     switch (boardaction) {
                         case 'Policy Peek':
                             announce(boardaction)
+                            let peekpolicies = this.deck.slice(0,3)
+                            socketsend(this.socket, 'additionalinfo', [this.roomcode, this.currentpresident], `next policies are ${peekpolicies[0]}, ${peekpolicies[1]} and ${peekpolicies[3]}`)
+                            this.state = this.president
+                            this.newpresident()
                             break;
                         case 'Execution':
                             announce(boardaction)
+                            setTimeout(() => {
+                                announce('"I formally execute..."')
+                                this.state = this.execute
+                                let playernames = this.playerlist.map(player => player[0]).filter(player => player !== this.currentpresident)
+                                playernames.push('who dies?')
+                                socketsend(this.socket, 'buttonoption', [this.roomcode, this.currentpresident], playernames)
+                            }, pausetime)
                             break;
-                        case 'Investigate Loyalty':
+                        case 'Investigate Loyalty': {
+                            let playernames = this.playerlist.map(player => player[0]).filter(player => player !== this.currentpresident)
+                            playernames.push('who will you investigate?')
+
+                            this.state = this.investigate
+                            socketsend(this.socket, 'buttonoption', [this.roomcode, this.currentpresident], playernames)
                             announce(boardaction)
                             break;
-                        case 'Call Special Election':
+                        }
+                        case 'Call Special Election': {
+                            let playernames = this.playerlist.map(player => player[0]).filter(player => player !== this.currentpresident)
+                            playernames.push('choose the special president')
+                            
+                            this.state = this.spelection
+                            socketsend(this.socket, 'buttonoption', [this.roomcode, this.currentpresident], playernames)
                             announce(boardaction)
                             break;
+                        }
                         default:
                             this.state = this.president
                             this.newpresident()
@@ -273,19 +335,82 @@ export class Game {
         }
     }
 
-    veto() {
-
+    veto(approval) {
+        if (approval[0] === this.currentpresident) { //only accepts responses from the current president
+            if (approval[1] === 'Ja!') {
+                announce('veto approved')
+                this.electiontracker++
+                this.newpresident()
+                this.state = this.president
+            } else {
+                announce('veto rejected')
+                this.cardvalidation.splice(2, 1)//removes veto option
+                this.state = this.chancellordiscard
+                this.sendpolicies(this.chancellor)
+            }
+        }
     }
 
-    investigate() {
+    investigate(investigate) {
+        if (investigate[0] === this.currentpresident) {
+            for (let i = 0; i < this.playerlist.length; i++) {
+                if (investigate[1] === this.playerlist[i][0]) {
+                    socketsend(this.socket, 'additionalinfo', [this.roomcode, this.currentpresident], `${investigate[1]} is a ${this.playerlist[i][1]}`)
+                    break;
+                }
+            }
 
+            this.state = this.president
+            this.newpresident()
+            socketsend(this.socket, 'buttonoption', [this.roomcode, this.currentpresident], playernames)
+        }
     }
 
-    spelection() {
+    spelection(specialchoice) {
+        if (specialchoice[0] === this.currentpresident) {
+            this.currentpresident = specialchoice[1]
 
+            document.querySelector('.president').classList.remove('president')
+            document.querySelector('.chancellor').classList.remove('chancellor')
+
+            document.getElementById(this.currentpresident).classList.add('president')
+            announce(`${this.currentpresident} is the president`)
+            let playernames = this.playerlist.map(player => player[0]).filter(player => (player !== this.currentpresident) && !(this.previousgovernment.includes(player)))
+            playernames.push('choose your chancellor')
+
+            this.state = this.president
+            socketsend(this.socket, 'buttonoption', [this.roomcode, this.currentpresident], playernames)
+        }
     }
 
-    execute() {
-        
+    execute(victim) {
+        if (victim[0] === this.currentpresident) {
+            const die = victim[1]
+            announce(`"${die}"`)
+            let victimindex = 0
+            for (let i = 0; i < this.playerlist.length; i++) {
+                if (die === this.playerlist[i][0]) {
+                    victimindex = i
+                    break;
+                }
+            }
+            if (this.playerlist[victimindex][2] === 'H') {
+                openpage('additionalinfo')
+                announce('LIBERALS WIN')
+            } else {
+                if (this.nextpresident > victimindex) { //negates any displacement caused by the execution for next round
+                    this.nextpresident--
+                }
+                if (this.nextpresident === this.playerlist.length-1) {
+                    this.nextpresident = 0
+                }
+
+                socketsend(this.socket, 'additionalinfo', [this.roomcode, this.playerlist[victimindex][0]], '<h1>You are dead</h1>')
+                console.log(this.playerlist.splice(victimindex, 1))
+                document.getElementById(die).classList.add('dead')
+                this.state = this.president
+                this.newpresident()
+            }
+        }
     }
 }

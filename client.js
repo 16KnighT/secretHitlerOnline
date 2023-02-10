@@ -106,9 +106,13 @@ window.addEventListener('load', () => { //attach events to HTML elements here
                 }
                 case 'additionalinfo': //this appends information to the bottom of the screen which can be kept static, even while the page changes
                         document.getElementById('additionalinfo').innerHTML  += mssg.data
-                        setTimeout(() => {
-                            document.getElementById('additionalinfo').innerHTML = ''
-                        }, 5000)
+                        if (mssg.data !== '<h1>You are dead</h1>') {
+                            setTimeout(() => {
+                                document.getElementById('additionalinfo').innerHTML = ''
+                            }, 5000)
+                        } else {
+                            socket.close()
+                        }
                     break;
                 default:
                     console.log('Unidentifiable action')
